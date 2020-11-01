@@ -4,7 +4,7 @@ import { getProductById } from './getProductById.handler';
 test('Returns a single product', async () => {
   const res = await getProductById(({ pathParameters: { id: '0' } } as unknown) as APIGatewayProxyEvent, null, null);
   expect((res as APIGatewayProxyResult).body).toBe(
-    '{"name":"Green Lightsaber","price":750,"imgUrl":"https://images-na.ssl-images-amazon.com/images/I/41YsZiuMvrL._AC_SX425_.jpg","id":"0"}',
+    '{"name":"Green Lightsaber","price":75000,"imgUrl":"https://images-na.ssl-images-amazon.com/images/I/41YsZiuMvrL._AC_SX425_.jpg","id":"0"}',
   );
 });
 
