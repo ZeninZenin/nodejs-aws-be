@@ -1,32 +1,42 @@
 import { APIGatewayProxyHandler } from 'aws-lambda';
-import fetch from 'node-fetch';
 import 'source-map-support/register';
-import { PRODUCTS_MOCK } from '../../mockData';
-import { streamToString } from '../../utils';
+import { Connection } from 'typeorm';
+import { Database } from '../../data-access';
+import { logger } from '../../services';
 
 export const getAllProducts: APIGatewayProxyHandler = async () => {
   let result: string;
-  let factor = 0.013;
+  let connection: Connection;
 
   try {
-    const currencyRes = await fetch('https://api.exchangeratesapi.io/latest?base=RUB');
-    const currency = await streamToString(currencyRes.body);
-    factor = JSON.parse(currency).rates.USD;
+    const db = new Database();
+    connection = await db.connect();
   } catch (err) {
-    console.log('Currency API isn`t working.');
-    console.log(err);
-  }
-
-  try {
-    result = JSON.stringify(PRODUCTS_MOCK.map(product => ({ ...product, price: product.price * factor })));
-  } catch (err) {
-    console.log(err);
+    connection?.close();
 
     return {
       statusCode: 500,
       body: 'Internal Service Error',
     };
   }
+
+  try {
+    const products = await connection.manager.query(
+      `SELECT * FROM products p LEFT JOIN (SELECT count, "productId" AS id FROM stocks) s ON p.id = s.id`,
+    );
+
+    result = JSON.stringify(products);
+  } catch (err) {
+    logger.error(err);
+    connection.close();
+
+    return {
+      statusCode: 500,
+      body: 'Internal Service Error',
+    };
+  }
+
+  connection.close();
 
   return {
     statusCode: 200,
