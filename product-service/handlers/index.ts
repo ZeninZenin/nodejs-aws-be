@@ -1,2 +1,3 @@
-export { getAllProducts } from './getAllProducts/getAllProducts.handler';
-export { getProductById } from './getProductById/getProductById.handler';
+export { getAllProducts } from './getAllProducts';
+export { getProductById } from './getProductById';
+export { addProduct } from './addProduct';

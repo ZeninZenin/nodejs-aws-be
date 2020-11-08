@@ -1,8 +1,10 @@
 import { APIGatewayProxyHandler } from 'aws-lambda';
 import 'source-map-support/register';
 import { Connection } from 'typeorm';
+import { CORS_HEADERS } from '../../constants';
 import { Database } from '../../data-access';
 import { logger } from '../../services';
+import { handleInternalError } from '../../utils';
 
 export const getAllProducts: APIGatewayProxyHandler = async () => {
   process.on('uncaughtException', err => {
@@ -19,10 +21,7 @@ export const getAllProducts: APIGatewayProxyHandler = async () => {
   } catch (err) {
     connection?.close();
 
-    return {
-      statusCode: 500,
-      body: 'Internal Service Error',
-    };
+    return handleInternalError(err);
   }
 
   try {
@@ -32,22 +31,16 @@ export const getAllProducts: APIGatewayProxyHandler = async () => {
 
     result = JSON.stringify(products);
   } catch (err) {
-    logger.error(err);
     connection.close();
 
-    return {
-      statusCode: 500,
-      body: 'Internal Service Error',
-    };
+    return handleInternalError(err);
   }
 
   connection.close();
 
   return {
     statusCode: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-    },
+    headers: CORS_HEADERS,
     body: result,
   };
 };

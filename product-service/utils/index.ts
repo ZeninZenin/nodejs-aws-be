@@ -1,1 +1,1 @@
-export { streamToString } from './streamToString';
+export { handleInternalError } from './handleInternalError';
