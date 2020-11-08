@@ -5,6 +5,11 @@ import { Database } from '../../data-access';
 import { logger } from '../../services';
 
 export const getAllProducts: APIGatewayProxyHandler = async () => {
+  process.on('uncaughtException', err => {
+    logger.error(err);
+  });
+  logger.info('getAllProducts()');
+
   let result: string;
   let connection: Connection;
 

@@ -3,9 +3,15 @@ import 'source-map-support/register';
 import { Connection } from 'typeorm';
 import { Database } from '../../data-access';
 import { Product } from '../../entities';
+import { logger } from '../../services';
 
 export const getProductById: APIGatewayProxyHandler = async ({ pathParameters }) => {
+  process.on('uncaughtException', err => {
+    logger.error(err);
+  });
+
   const { id } = pathParameters;
+  logger.info(`getProductById(); id=${id}`);
 
   if (id?.length !== 36) {
     return {
@@ -27,12 +33,13 @@ export const getProductById: APIGatewayProxyHandler = async ({ pathParameters })
       LEFT JOIN 
         (SELECT count, "productId" AS id FROM stocks) s 
       ON p.id = s.id 
-      WHERE p.id = ${id}`,
-    );
+      WHERE p.id = '${id}';`,
+    )?.[0];
 
     connection.close();
-  } catch {
+  } catch (err) {
     connection?.close();
+    logger.error(err);
 
     return {
       statusCode: 500,
@@ -52,7 +59,7 @@ export const getProductById: APIGatewayProxyHandler = async ({ pathParameters })
   try {
     result = JSON.stringify(hit);
   } catch (err) {
-    console.log(err);
+    logger.error(err);
 
     return {
       statusCode: 500,
