@@ -1,6 +1,6 @@
 import type { Serverless } from 'serverless/aws';
 
-const serverlessConfiguration: Serverless = {
+export const serverlessConfiguration: Serverless = {
   service: {
     name: 'product-service',
   },
@@ -8,7 +8,9 @@ const serverlessConfiguration: Serverless = {
   custom: {
     webpack: {
       webpackConfig: './webpack.config.js',
-      includeModules: true,
+      includeModules: {
+        forceInclude: ['pg'],
+      },
     },
   },
   // Add the serverless-webpack plugin
@@ -23,6 +25,11 @@ const serverlessConfiguration: Serverless = {
     },
     environment: {
       AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1',
+      PG_HOST: 'rss-nodejs-aws-db.cgffwusdruom.eu-west-1.rds.amazonaws.com',
+      PG_PORT: 5432,
+      PG_DB: 'rss_nodejs_aws',
+      PG_USER: 'postgres',
+      PG_PASS: process.env.PG_PASS,
     },
   },
   functions: {
@@ -45,6 +52,18 @@ const serverlessConfiguration: Serverless = {
           http: {
             method: 'get',
             path: 'products/{id}',
+            cors: true,
+          },
+        },
+      ],
+    },
+    addProduct: {
+      handler: 'handler.addProduct',
+      events: [
+        {
+          http: {
+            method: 'post',
+            path: 'products',
             cors: true,
           },
         },

@@ -1,22 +1,57 @@
 import { APIGatewayProxyHandler } from 'aws-lambda';
 import 'source-map-support/register';
-import { PRODUCTS_MOCK } from '../../mockData';
+import { Connection } from 'typeorm';
+import { CORS_HEADERS } from '../../constants';
+import { Database } from '../../data-access';
+import { Product } from '../../entities';
+import { logger } from '../../services';
+import { handleInternalError } from '../../utils';
 
 export const getProductById: APIGatewayProxyHandler = async ({ pathParameters }) => {
-  const { id } = pathParameters;
+  process.on('uncaughtException', err => {
+    logger.error(err);
+  });
 
-  if (isNaN(+id)) {
+  const { id } = pathParameters;
+  logger.info(`getProductById(); id=${id}`);
+
+  if (id?.length !== 36) {
     return {
       statusCode: 400,
-      body: `ID must be a number`,
+      headers: CORS_HEADERS,
+      body: `ID is incorrect`,
     };
   }
 
-  const hit = PRODUCTS_MOCK.find(product => product.id === id);
+  let connection: Connection;
+  let hit: Product;
+
+  try {
+    const db = new Database();
+    connection = await db.connect();
+
+    hit = (
+      await connection.manager.query(
+        `SELECT * 
+      FROM products p 
+      LEFT JOIN 
+        (SELECT count, "productId" AS id FROM stocks) s 
+      ON p.id = s.id 
+      WHERE p.id = '${id}';`,
+      )
+    )?.[0];
+
+    connection.close();
+  } catch (err) {
+    connection?.close();
+
+    return handleInternalError(err);
+  }
 
   if (!hit) {
     return {
       statusCode: 404,
+      headers: CORS_HEADERS,
       body: `A product with id: ${pathParameters.id} is not found`,
     };
   }
@@ -26,16 +61,12 @@ export const getProductById: APIGatewayProxyHandler = async ({ pathParameters })
   try {
     result = JSON.stringify(hit);
   } catch (err) {
-    console.log(err);
-
-    return {
-      statusCode: 500,
-      body: 'Internal Service Error',
-    };
+    return handleInternalError(err);
   }
 
   return {
     statusCode: 200,
+    headers: CORS_HEADERS,
     body: result,
   };
 };
