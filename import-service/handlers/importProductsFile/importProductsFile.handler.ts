@@ -1,8 +1,8 @@
 import { APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
 import { S3 } from 'aws-sdk';
 import 'source-map-support/register';
-import { BUCKET_NAME, CORS_HEADERS } from '../constants';
-import { logger } from '../services';
+import { BUCKET_NAME, CORS_HEADERS } from '../../constants';
+import { logger } from '../../services';
 
 export const importProductsFile: APIGatewayProxyHandler = async ({ queryStringParameters }) => {
   logger.info(`importProductsFile(); fileName: ${queryStringParameters.name}`);
