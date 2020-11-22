@@ -5,6 +5,7 @@ import { CORS_HEADERS } from '../../constants';
 import { Database } from '../../data-access';
 import { Product, Stock } from '../../entities';
 import { logger } from '../../services';
+import { ProductCreationBody } from '../../types';
 import { handleInternalError } from '../../utils';
 
 export const addProduct: APIGatewayProxyHandler = async ({ body }) => {
@@ -13,7 +14,7 @@ export const addProduct: APIGatewayProxyHandler = async ({ body }) => {
   });
   logger.info(`addProduct(); body: ${body}`);
 
-  let parsedBody: Omit<Product & Stock, 'id' | 'productId' | 'product'>;
+  let parsedBody: ProductCreationBody;
   let connection: Connection;
   let newProduct = new Product();
   const newStock = new Stock();

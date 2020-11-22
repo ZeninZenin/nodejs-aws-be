@@ -1,9 +1,16 @@
 import type { Serverless } from 'serverless/aws';
-import { BUCKET_NAME } from './constants';
+import {
+  BUCKET_NAME,
+  SERVICE_NAME,
+  SNS_TOPIC_LOCAL_NAME,
+  SNS_TOPIC_NAME,
+  SQS_QUEUE_LOCAL_NAME,
+  SQS_QUEUE_NAME,
+} from './constants';
 
 const serverlessConfiguration: Serverless = {
   service: {
-    name: 'import-service',
+    name: SERVICE_NAME,
   },
   frameworkVersion: '2',
   custom: {
@@ -22,17 +29,39 @@ const serverlessConfiguration: Serverless = {
     },
     environment: {
       AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1',
+      CREATE_PRODUCT_SQS_URL: {
+        Ref: SQS_QUEUE_LOCAL_NAME,
+      },
+      CREATE_PRODUCT_SNS_ARN: {
+        Ref: SNS_TOPIC_LOCAL_NAME,
+      },
     },
     iamRoleStatements: [
       {
         Effect: 'Allow',
         Action: 's3:ListBucket',
-        Resource: ['arn:aws:s3:::rss-nodejs-aws-import-service'],
+        Resource: [`arn:aws:s3:::rss-nodejs-aws-${SERVICE_NAME}`],
       },
       {
         Effect: 'Allow',
         Action: 's3:*',
-        Resource: ['arn:aws:s3:::rss-nodejs-aws-import-service/*'],
+        Resource: [`arn:aws:s3:::rss-nodejs-aws-${SERVICE_NAME}/*`],
+      },
+      {
+        Effect: 'Allow',
+        Action: 'sqs:*',
+        Resource: [
+          {
+            'Fn::GetAtt': [SQS_QUEUE_LOCAL_NAME, 'Arn'],
+          },
+        ],
+      },
+      {
+        Effect: 'Allow',
+        Action: 'sns:*',
+        Resource: {
+          Ref: SNS_TOPIC_LOCAL_NAME,
+        },
       },
     ],
   },
@@ -80,7 +109,7 @@ const serverlessConfiguration: Serverless = {
       WebAppS3Bucket: {
         Type: 'AWS::S3::Bucket',
         Properties: {
-          BucketName: 'rss-nodejs-aws-import-service',
+          BucketName: `rss-nodejs-aws-${SERVICE_NAME}`,
           AccessControl: 'PublicRead',
         },
       },
@@ -98,10 +127,50 @@ const serverlessConfiguration: Serverless = {
                 Effect: 'Allow',
                 Principal: { AWS: '*' },
                 Action: 's3:GetObject',
-                Resource: 'arn:aws:s3:::rss-nodejs-aws-import-service/*',
+                Resource: `arn:aws:s3:::rss-nodejs-aws-${SERVICE_NAME}/*`,
               },
             ],
           },
+        },
+      },
+      [SQS_QUEUE_LOCAL_NAME]: {
+        Type: 'AWS::SQS::Queue',
+        Properties: {
+          QueueName: SQS_QUEUE_NAME,
+        },
+      },
+      [SNS_TOPIC_LOCAL_NAME]: {
+        Type: 'AWS::SNS::Topic',
+        Properties: {
+          TopicName: SNS_TOPIC_NAME,
+        },
+      },
+      SNSSubscription: {
+        Type: 'AWS::SNS::Subscription',
+        Properties: {
+          Endpoint: 'zeninser@outlook.com',
+          Protocol: 'email',
+          TopicArn: {
+            Ref: SNS_TOPIC_LOCAL_NAME,
+          },
+        },
+      },
+    },
+    Outputs: {
+      SQSQueueArn: {
+        Value: {
+          'Fn::GetAtt': [SQS_QUEUE_LOCAL_NAME, 'Arn'],
+        },
+        Export: {
+          Name: `${SQS_QUEUE_NAME}Arn`,
+        },
+      },
+      SNSTopicArn: {
+        Value: {
+          Ref: SNS_TOPIC_LOCAL_NAME,
+        },
+        Export: {
+          Name: `${SNS_TOPIC_NAME}Arn`,
         },
       },
     },

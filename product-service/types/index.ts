@@ -1,1 +1,1 @@
-export { Product } from './product';
+export { ProductMeta, ProductFull, ProductCreationBody, ProductsCreationResult } from './product';

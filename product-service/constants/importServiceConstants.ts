@@ -1,0 +1,2 @@
+export const IMPORT_SERVICE_SQS_QUEUE_NAME = 'catalogItemsQueue';
+export const IMPORT_SERVICE_SQS_QUEUE_ARN_OUT_NAME = `${IMPORT_SERVICE_SQS_QUEUE_NAME}Arn`;

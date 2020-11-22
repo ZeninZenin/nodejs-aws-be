@@ -18,7 +18,7 @@ export class Product {
 
   @Column({ nullable: true })
   @ValidateIf(product => !!product.imgUrl)
-  @IsUrl()
+  @IsString({ message: 'The imgUrl should be a string' })
   imgUrl?: string;
 
   @Column({ nullable: true })
