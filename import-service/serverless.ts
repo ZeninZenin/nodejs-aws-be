@@ -145,13 +145,29 @@ const serverlessConfiguration: Serverless = {
           TopicName: SNS_TOPIC_NAME,
         },
       },
-      SNSSubscription: {
+      SNSSubscriptionExpensiveProducts: {
         Type: 'AWS::SNS::Subscription',
         Properties: {
           Endpoint: 'zeninser@outlook.com',
           Protocol: 'email',
           TopicArn: {
             Ref: SNS_TOPIC_LOCAL_NAME,
+          },
+          FilterPolicy: {
+            isExpensive: ['true'],
+          },
+        },
+      },
+      SNSSubscriptionCheapProducts: {
+        Type: 'AWS::SNS::Subscription',
+        Properties: {
+          Endpoint: 'zzzeninzenin@gmail.com',
+          Protocol: 'email',
+          TopicArn: {
+            Ref: SNS_TOPIC_LOCAL_NAME,
+          },
+          FilterPolicy: {
+            isExpensive: ['false'],
           },
         },
       },

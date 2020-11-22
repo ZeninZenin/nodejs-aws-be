@@ -37,9 +37,15 @@ export const importFileParser: S3Handler = async event => {
 
           await sns
             .publish({
-              Subject: 'New products',
+              Subject: 'New product',
               Message: message,
               TopicArn: process.env.CREATE_PRODUCT_SNS_ARN,
+              MessageAttributes: {
+                isExpensive: {
+                  DataType: 'String',
+                  StringValue: data?.price > 1000 ? 'true' : 'false',
+                },
+              },
             })
             .promise();
         })
