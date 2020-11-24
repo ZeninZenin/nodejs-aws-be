@@ -1,10 +1,11 @@
 import { SQSHandler } from 'aws-lambda';
-import { validate } from 'class-validator';
 import { Connection } from 'typeorm';
 import { Database } from '../../data-access';
 import { Product, Stock } from '../../entities';
 import { logger } from '../../services';
-import { ProductCreationBody, ProductsCreationResult } from '../../types';
+import { ProductsCreationResult } from '../../types';
+import { ProductCreationData } from './catalogBatchProcess.types';
+import { getProductCreationData, validateCreationData } from './utils';
 
 export const catalogBatchProcess: SQSHandler = async ({ Records }) => {
   process.on('uncaughtException', err => {
@@ -15,24 +16,10 @@ export const catalogBatchProcess: SQSHandler = async ({ Records }) => {
   const result = await Promise.allSettled<Promise<ProductsCreationResult>>(
     Records.map(async ({ body }) => {
       let connection: Connection;
-      let parsedBody: ProductCreationBody;
-      const newProduct = new Product();
-      const newStock = new Stock();
+      let creationData: ProductCreationData;
 
       try {
-        parsedBody = JSON.parse(body);
-        const { count, ...product } = parsedBody;
-
-        Object.keys(product).forEach(key => {
-          const value = product[key];
-
-          if (key === 'price') {
-            newProduct[key] = +value;
-          } else {
-            newProduct[key] = value;
-          }
-        });
-        newStock.count = +count;
+        creationData = getProductCreationData(body);
       } catch (error) {
         return {
           success: false,
@@ -42,10 +29,7 @@ export const catalogBatchProcess: SQSHandler = async ({ Records }) => {
       }
 
       try {
-        const validationErrors = [
-          ...(await validate(newProduct, { validationError: { target: false } })),
-          ...(await validate(newStock, { validationError: { target: false } })),
-        ];
+        const validationErrors = await validateCreationData(creationData);
 
         if (validationErrors.length > 0) {
           return {
@@ -66,6 +50,7 @@ export const catalogBatchProcess: SQSHandler = async ({ Records }) => {
 
       try {
         connection = await db.connect();
+        const { newStock, newProduct } = creationData;
         let newProductId: string;
 
         await connection.transaction(async transactionalEntityManager => {

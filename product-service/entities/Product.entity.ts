@@ -1,4 +1,4 @@
-import { IsInt, IsNotEmpty, IsString, IsUrl, ValidateIf } from 'class-validator';
+import { IsInt, IsNotEmpty, IsString, ValidateIf } from 'class-validator';
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity({ name: 'products' })
