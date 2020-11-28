@@ -1,1 +1,1 @@
-export { getAllProducts, getProductById, addProduct } from './handlers';
+export { getAllProducts, getProductById, addProduct, catalogBatchProcess } from './handlers';

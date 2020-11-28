@@ -1,6 +1,6 @@
-import { Product } from '../types';
+import { ProductMeta } from '../types';
 
-export const INITIAL_PRODUCTS: Product[] = [
+export const INITIAL_PRODUCTS: ProductMeta[] = [
   {
     name: 'Green Lightsaber',
     price: 750,

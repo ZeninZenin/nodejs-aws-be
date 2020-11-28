@@ -1,12 +1,14 @@
 import { S3Handler } from 'aws-lambda';
 import * as csvParser from 'csv-parser';
-import { S3 } from 'aws-sdk';
+import { S3, SNS, SQS } from 'aws-sdk';
 import { logger } from '../services';
 import { BUCKET_NAME } from '../constants';
 
 export const importFileParser: S3Handler = async event => {
   logger.info('importFileParser()');
   const s3 = new S3({ region: 'eu-west-1' });
+  const sqs = new SQS({ region: 'eu-west-1' });
+  const sns = new SNS({ region: 'eu-west-1' });
 
   const promises = event.Records.map(async record => {
     const KeyUploaded = record.s3.object.key;
@@ -22,7 +24,31 @@ export const importFileParser: S3Handler = async event => {
     return await new Promise((resolve, reject) => {
       stream
         .pipe(csvParser())
-        .on('data', data => logger.info(data))
+        .on('data', async data => {
+          await sqs
+            .sendMessage({
+              QueueUrl: process.env.CREATE_PRODUCT_SQS_URL,
+              MessageBody: JSON.stringify(data),
+            })
+            .promise();
+
+          const message = `Send new product to product service: ${JSON.stringify(data)}`;
+          logger.info(message);
+
+          await sns
+            .publish({
+              Subject: 'New product',
+              Message: message,
+              TopicArn: process.env.CREATE_PRODUCT_SNS_ARN,
+              MessageAttributes: {
+                isExpensive: {
+                  DataType: 'String',
+                  StringValue: data?.price > 1000 ? 'true' : 'false',
+                },
+              },
+            })
+            .promise();
+        })
         .on('end', async () => {
           logger.info(`Copy from ${BUCKET_NAME}/${KeyUploaded}`);
 
@@ -45,7 +71,10 @@ export const importFileParser: S3Handler = async event => {
 
           logger.info(`File ${BUCKET_NAME}/${KeyUploaded} has been deleted`);
         })
-        .on('error', error => reject(error))
+        .on('error', error => {
+          logger.error(error);
+          reject(error);
+        })
         .on('close', () => resolve());
     });
   });

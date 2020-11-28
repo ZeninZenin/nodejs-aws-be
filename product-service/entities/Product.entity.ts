@@ -1,4 +1,4 @@
-import { IsInt, IsNotEmpty, IsString, IsUrl, ValidateIf } from 'class-validator';
+import { IsInt, IsNotEmpty, IsString, ValidateIf } from 'class-validator';
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity({ name: 'products' })
@@ -18,7 +18,7 @@ export class Product {
 
   @Column({ nullable: true })
   @ValidateIf(product => !!product.imgUrl)
-  @IsUrl()
+  @IsString({ message: 'The imgUrl should be a string' })
   imgUrl?: string;
 
   @Column({ nullable: true })

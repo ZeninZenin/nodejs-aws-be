@@ -1,8 +1,9 @@
 import type { Serverless } from 'serverless/aws';
+import { IMPORT_SERVICE_SQS_QUEUE_ARN_OUT_NAME, SERVICE_NAME } from './constants';
 
 export const serverlessConfiguration: Serverless = {
   service: {
-    name: 'product-service',
+    name: SERVICE_NAME,
   },
   frameworkVersion: '2',
   custom: {
@@ -65,6 +66,19 @@ export const serverlessConfiguration: Serverless = {
             method: 'post',
             path: 'products',
             cors: true,
+          },
+        },
+      ],
+    },
+    catalogBatchProcess: {
+      handler: 'handler.catalogBatchProcess',
+      events: [
+        {
+          sqs: {
+            batchSize: 5,
+            arn: {
+              'Fn::ImportValue': IMPORT_SERVICE_SQS_QUEUE_ARN_OUT_NAME,
+            },
           },
         },
       ],
