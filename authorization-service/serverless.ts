@@ -1,4 +1,5 @@
 import type { Serverless } from 'serverless/aws';
+import { LAMBDA_AUTH_NAME } from './constants';
 
 const serverlessConfiguration: Serverless = {
   service: {
@@ -15,10 +16,11 @@ const serverlessConfiguration: Serverless = {
     },
   },
   // Add the serverless-webpack plugin
-  plugins: ['serverless-webpack'],
+  plugins: ['serverless-webpack', 'serverless-dotenv-plugin'],
   provider: {
     name: 'aws',
     runtime: 'nodejs12.x',
+    region: 'eu-west-1',
     apiGateway: {
       minimumCompressionSize: 1024,
     },
@@ -27,16 +29,21 @@ const serverlessConfiguration: Serverless = {
     },
   },
   functions: {
-    hello: {
-      handler: 'handler.hello',
-      events: [
-        {
-          http: {
-            method: 'get',
-            path: 'hello',
-          },
+    [LAMBDA_AUTH_NAME]: {
+      handler: `handler.${LAMBDA_AUTH_NAME}`,
+    },
+  },
+  resources: {
+    Resources: {},
+    Outputs: {
+      lambdaAuthorizerArn: {
+        Value: {
+          'Fn::GetAtt': [`${LAMBDA_AUTH_NAME[0].toUpperCase()}${LAMBDA_AUTH_NAME.slice(1)}LambdaFunction`, 'Arn'],
         },
-      ],
+        Export: {
+          Name: `${LAMBDA_AUTH_NAME}Arn`,
+        },
+      },
     },
   },
 };

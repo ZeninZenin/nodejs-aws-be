@@ -1,5 +1,6 @@
 import type { Serverless } from 'serverless/aws';
 import {
+  AUTH_SERVICE_NAME,
   BUCKET_NAME,
   SERVICE_NAME,
   SNS_TOPIC_LOCAL_NAME,
@@ -24,6 +25,7 @@ const serverlessConfiguration: Serverless = {
     name: 'aws',
     runtime: 'nodejs12.x',
     region: 'eu-west-1',
+    stage: `${'$'}{opt:stage, 'dev'}`,
     apiGateway: {
       minimumCompressionSize: 1024,
     },
@@ -81,6 +83,13 @@ const serverlessConfiguration: Serverless = {
               },
             },
             cors: true,
+            authorizer: {
+              name: 'basicAuthorizer',
+              arn: `${'$'}{cf:${AUTH_SERVICE_NAME}-${'$'}{self:provider.stage}.lambdaAuthorizerArn}`,
+              resultTtlInSeconds: 0,
+              identitySource: 'method.request.header.Authorization',
+              type: 'token',
+            },
           },
         },
       ],
@@ -168,6 +177,32 @@ const serverlessConfiguration: Serverless = {
           },
           FilterPolicy: {
             isExpensive: ['false'],
+          },
+        },
+      },
+      GatewayResponseDefault4XX: {
+        Type: 'AWS::ApiGateway::GatewayResponse',
+        Properties: {
+          ResponseParameters: {
+            'gatewayresponse.header.Access-Control-Allow-Origin': "'*'",
+            'gatewayresponse.header.Access-Control-Allow-Headers': "'*'",
+          },
+          ResponseType: 'DEFAULT_4XX',
+          RestApiId: {
+            Ref: 'ApiGatewayRestApi',
+          },
+        },
+      },
+      GatewayResponseDefault5XX: {
+        Type: 'AWS::ApiGateway::GatewayResponse',
+        Properties: {
+          ResponseParameters: {
+            'gatewayresponse.header.Access-Control-Allow-Origin': "'*'",
+            'gatewayresponse.header.Access-Control-Allow-Headers': "'*'",
+          },
+          ResponseType: 'DEFAULT_5XX',
+          RestApiId: {
+            Ref: 'ApiGatewayRestApi',
           },
         },
       },
