@@ -1,0 +1,4 @@
+export const RECIPIENT_URL_ENV_VAR_NAMES = {
+  products: 'RECIPIENT_URL_PRODUCTS',
+  cart: 'RECIPIENT_URL_CART',
+}
