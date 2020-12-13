@@ -1,0 +1,18 @@
+# packages (ignore node modules, becouse it installed in build time and Docker doesn`t need to now about local node_modules)
+node_modules
+
+
+.eslintrc
+.gitignore
+.prettierrc
+*.md
+
+# test (don`t need it in production)
+test
+
+# build (this folder creates in build time, just like node_modules)
+dist
+
+.elasticbeanstalk
+npm-debug.log
+*.spec.*

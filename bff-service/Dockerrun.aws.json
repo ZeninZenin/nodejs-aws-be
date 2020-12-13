@@ -1,0 +1,12 @@
+{
+  "AWSEBDockerrunVersion": "1",
+  "Image": {
+    "Name": "053938439131.dkr.ecr.eu-west-1.amazonaws.com/zeninzenin-bff-service:latest",
+    "Update": "true"
+  },
+  "Ports": [
+    {
+      "ContainerPort": 8080
+    }
+  ]
+}
